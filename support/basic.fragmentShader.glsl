@@ -34,9 +34,6 @@ uniform Material material;
 
 void main()
 {
-  // float d = min(length(f_pos)/100.0, 1);  // The depth is just the norm of f_pos (camera coordinates).
-  // color = d*vec4(1.0, 1.0, 1.0, 1) + (1-d)*color;
-
   if (light_on == 1)
   {
     vec3 position = vec3(0, 3, 0);
@@ -56,7 +53,6 @@ void main()
     vec3 Id = material.Kd *(light.Ld * max(dot(l, n), 0.0))*att;
     vec3 Is = material.Ks *(light.Ls * pow(max(dot(l, r), 0.0), alpha))*att;
 
-    //c = color * (Ia + Id + Is) * dot(light.normal, l);
     vec4 color = (1-tex_on)*vec4(1, 1, 1, 1) + (tex_on)*texture(tex, v_tex_coord);
     c = color * vec4((Ia + Id + Is), 1.0);
   }

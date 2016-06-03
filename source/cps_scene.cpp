@@ -41,12 +41,16 @@ void CPSScene::Init(BasicPipelineProgram* pipelineProgram, GLuint programHandle)
 
   terrain->SetLighting(true);
   sky->SetLighting(false);
-  earth->SetLighting(false);
+  earth->SetLighting(true);
 
   mObjects.push_back(originAxis);
   mObjects.push_back(originGrid);
-  mObjects.push_back(earth);
+  //mObjects.push_back(earth);
   mObjects.push_back(sky);
+
+  // Initialie particle system here.
+  mParticleSystem = new ParticleSystem(pipelineProgram, programHandle);
+  mParticleSystem->Setup(11, Eigen::Vector2d(0, 0));
 
   mInitialized = true;
 }
@@ -54,6 +58,7 @@ void CPSScene::Init(BasicPipelineProgram* pipelineProgram, GLuint programHandle)
 void CPSScene::Render()
 {
   Scene::Render();
+  mParticleSystem->Render();
 
   // // Render cameras as axis.
   // for (auto camera : mCameras)
@@ -70,6 +75,7 @@ void CPSScene::Render()
 void CPSScene::Animate()
 {
   Scene::Animate();
+  mParticleSystem->Animate();
 }
 
 void CPSScene::OnMouseLeftClick(int x, int y, int w, int h)
@@ -89,7 +95,6 @@ void CPSScene::OnMouseRightClick(int x, int y, int w, int h)
 void CPSScene::Clean()
 {
   Scene::Clean();
-
-
+  delete mParticleSystem;
 }
 

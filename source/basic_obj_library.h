@@ -188,11 +188,17 @@ public:
     mMesh = mesh;
 
     mTexture = new Texture();
-    mTexture->Load(fileName);
+    bool success = mTexture->Load(fileName);
+
+    if (!success)
+    {
+      delete mTexture;
+      mTexture = nullptr;
+    }
 
     mMaterial = new Material( glm::vec3(0.18), 
-                              glm::vec3(0.8), 
-                              glm::vec3(0.02) );
+                              glm::vec3(0.9), 
+                              glm::vec3(0.05) );
 
     mUsingLighting = true;
     mIsMeshOwner = true;

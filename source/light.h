@@ -36,11 +36,11 @@ public:
   }
 
 private:
-  glm::vec3 mPos {0.0f,  200.0f, 0.0f};  // Center in world coordinates.
-  glm::vec3 mDir {0.0f, 1.0f,  0.0f};    // Direction vector in world coordinates.
+  glm::vec3 mPos {0.0f,  20.0f, 0.0f};  // Center in world coordinates.
+  glm::vec3 mDir {0.0f, -1.0f,  0.0f};    // Direction vector in world coordinates.
 
   GLfloat mLa {0.1f};  // Ambient component.
-  GLfloat mLd {0.8f};  // Diffuse component.
+  GLfloat mLd {0.9f};  // Diffuse component.
   GLfloat mLs {0.1f};  // Specular component.
 
   BasicPipelineProgram *mPipelineProgram {nullptr};

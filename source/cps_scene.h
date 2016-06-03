@@ -26,4 +26,8 @@ public:
   void OnMouseRightClick(int x, int y, int w, int h);
 
   virtual ~CPSScene() { Scene::Clean(); }
+
+public:
+  ParticleSystem* mParticleSystem;
+
 };
