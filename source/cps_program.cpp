@@ -110,12 +110,12 @@ void CPSProgram::MotionFunc(int x, int y)
     case kTRANSLATE:
       if (mMouse.mLftButton)
       {
-        camera->Translate(-mousePosDelta[0]/40.0f, +mousePosDelta[1]/10.0f, 0.0f);
+        camera->Translate(-mousePosDelta[0]/400.0f, +mousePosDelta[1]/100.0f, 0.0f);
       }
       if (mMouse.mRgtButton)
       {
         // control z translation via the right mouse button
-        camera->Translate(0.0f, 0.0f, +mousePosDelta[1]/10.0f);
+        camera->Translate(0.0f, 0.0f, +mousePosDelta[1]/100.0f);
       }
       break;
 

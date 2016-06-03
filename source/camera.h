@@ -51,7 +51,7 @@ public:
 
 private:
   // View parameters
-  glm::vec3 mPos {   0.0f, 0.0f, 15.0f};      // Center coordinates.
+  glm::vec3 mPos {   0.0f, 0.0f, 2.0f};      // Center coordinates.
   glm::vec3 mRot {   0.0f, 0.0f,  0.0f};      // Rotation angles.
   glm::vec3 mDir {   0.0f, 0.0f, -1.0f};      // Direction.
   glm::vec3 mUpVec { 0.0f, 1.0f,  0.0f};      // Up vector.
@@ -61,8 +61,8 @@ private:
   // Projection parameters
   GLfloat mFovy   {M_PI/3.0f};
   GLfloat mAspect {1280.0f/720.0f};
-  GLfloat mFarZ   {2000.0f};
-  GLfloat mNearZ  { 0.5f}; 
+  GLfloat mFarZ   {200.0f};
+  GLfloat mNearZ  { 0.05f}; 
 
   // Matrices.
   OpenGLMatrix mViewMatrix;

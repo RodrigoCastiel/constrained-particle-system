@@ -8,12 +8,13 @@ void ParticleSystem::Setup(int numParticles, const Eigen::Vector2d& Xc, double r
 
   mX = Matrix2Xd(2, mNumParticles);
   mV = Matrix2Xd(2, mNumParticles);
+  double x_max = 0.5;
 
   // Initialize particle coordinates and velocities.
   for (int i = 0; i < mNumParticles; i++)
   {
-    mX(0, i) = 10.0 * (static_cast<double>(i)/(mNumParticles-1)) - 5.0;
-    mX(1, i) = 2.5;
+    mX(0, i) = 2 * x_max * (static_cast<double>(i)/(mNumParticles-1)) - x_max;
+    mX(1, i) = 0.0;
 
     std::cout << "x: " << mX(0, i) << ", y: " << mX(1, i) << std::endl;
 
@@ -23,7 +24,7 @@ void ParticleSystem::Setup(int numParticles, const Eigen::Vector2d& Xc, double r
 
   // Load sphere to represent particle.
   mParticleObj = new TexturedSphere(mPipelineProgram, mProgramHandle);
-  mParticleObj->SetScale(0.1f, 0.1f, 0.1f);
+  mParticleObj->SetScale(0.02f, 0.02f, 0.02f);
   mParticleObj->Load("");
 
   // Load connectors mesh.

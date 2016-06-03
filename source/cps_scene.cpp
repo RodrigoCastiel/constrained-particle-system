@@ -17,40 +17,35 @@ void CPSScene::Init(BasicPipelineProgram* pipelineProgram, GLuint programHandle)
   AxisObject* originAxis = new AxisObject(pipelineProgram, programHandle);
   GridObject* originGrid = new GridObject(pipelineProgram, programHandle);
 
-  // Extra.
   TexturedSphere* sky     = new TexturedSphere(pipelineProgram, programHandle);
-  TexturedSphere* earth   = new TexturedSphere(pipelineProgram, programHandle);
-  TexturedTerrain* terrain = new TexturedTerrain(pipelineProgram, programHandle);
+  // TexturedTerrain* terrain = new TexturedTerrain(pipelineProgram, programHandle);
 
-  sky->SetScale(1000.0, 1000.0, 1000.0);
-  terrain->SetScale(2200.0f, 1.0f, 2200.0f);
-  terrain->SetPosition(0, -20, 0);
-
-  earth->SetPosition(0.0f, 0.0f, 0.0f);
-  earth->SetRotation(M_PI/6, M_PI, 0);
+  sky->SetScale(100.0, 100.0, 100.0);
+  // terrain->SetScale(220.0f, 0.1f, 220.0f);
+  // terrain->SetPosition(0, -20, 0);
 
   mCameras.push_back(new Camera(pipelineProgram, programHandle));
   mCameras.push_back(new Camera(pipelineProgram, programHandle));
 
-  sky->SetRotVelocity(2e-5, 1e-5, -1e-4f);
+  sky->SetRotVelocity(2e-6, 1e-6, -1e-5f);
 
   originAxis->Load();
   originGrid->Load(15, 15);
-  earth->Load("textures/earth.jpg");
+  originGrid->SetPosition(0, -1, 0);
+
   sky->Load("textures/outer_space.jpg");
 
-  terrain->SetLighting(true);
-  sky->SetLighting(false);
-  earth->SetLighting(true);
 
-  mObjects.push_back(originAxis);
+  // terrain->SetLighting(true);
+  sky->SetLighting(false);
+
+  //mObjects.push_back(originAxis);
   mObjects.push_back(originGrid);
-  //mObjects.push_back(earth);
   mObjects.push_back(sky);
 
   // Initialie particle system here.
   mParticleSystem = new ParticleSystem(pipelineProgram, programHandle);
-  mParticleSystem->Setup(11, Eigen::Vector2d(0, 0));
+  mParticleSystem->Setup(11, Eigen::Vector2d(0, -0.5));
 
   mInitialized = true;
 }

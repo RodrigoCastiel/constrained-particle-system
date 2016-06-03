@@ -119,7 +119,6 @@ public:
     mesh->SetProgramHandle(mProgramHandle);
     mesh->Load();
     mMesh = mesh;
-    SceneObject::SetScale(5.0f, 5.0f, 5.0f);
     mIsMeshOwner = true;
   }
 
@@ -166,7 +165,6 @@ public:
     mesh->Load();
     mMesh = mesh;
 
-    SceneObject::SetScale(w, 1.0f, h);
     mIsMeshOwner = true;
   }
 
