@@ -21,8 +21,6 @@ class SceneObject;
 class Camera
 {
 public:
-  enum CameraType { EDITOR, FPV };
-
   Camera(BasicPipelineProgram* pipelineProgram, GLuint programHandle) 
   : mPipelineProgram(pipelineProgram), mProgramHandle(programHandle)
   { } 
@@ -45,10 +43,7 @@ public:
   void SetPosition(GLfloat x, GLfloat y, GLfloat z);
   void SetRotation(GLfloat rx, GLfloat ry, GLfloat rz);
   
-  void SetCameraType(CameraType type) { mType = type; }
   void SetFocusObject(SceneObject* focusObject) { mFocusObject = focusObject; }
-
-  CameraType   GetCameraType()  { return mType;        }
   SceneObject* GetFocusObject() { return mFocusObject; }
 
   void SetPipelineProgramParam(BasicPipelineProgram *pipelineProgram, GLuint programHandle);
@@ -62,7 +57,6 @@ private:
   glm::vec3 mUpVec { 0.0f, 1.0f,  0.0f};      // Up vector.
   glm::vec3 mScale { 1.0f, 1.0f,  1.0f};      // Scales.
   SceneObject* mFocusObject { nullptr };      // The object at which the camera is looking.
-  CameraType mType { EDITOR  };   // Type of camera.
 
   // Projection parameters
   GLfloat mFovy   {M_PI/3.0f};
