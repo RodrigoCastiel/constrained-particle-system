@@ -9,6 +9,7 @@
 #pragma once
 
 #include "scene.h"
+#include "particle_system.h"
 
 class CPSScene : public Scene
 {
