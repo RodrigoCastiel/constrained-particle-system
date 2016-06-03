@@ -41,6 +41,7 @@ private:
   Eigen::Matrix2Xd mV;  // Velocities.
   Eigen::Vector2d mRingCenter;
   double mRingRadius;
+  double mLength;
 };
 
 class ConnectorsMesh : public Mesh
@@ -49,6 +50,6 @@ public:
   ConnectorsMesh() { }
   virtual ~ConnectorsMesh() { }
 
-  void Load(const Eigen::Matrix2Xd& X);
+  void Load(const Eigen::Matrix2Xd& X, float r = 1, float g = 1, float b = 1);
   void Update(const Eigen::Matrix2Xd& X);
 };
