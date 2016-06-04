@@ -66,18 +66,14 @@ void ParticleSystem::Setup(int numParticles, const Eigen::Vector2d& Xc, const Ei
   mRing->SetMeshOwner(true);
 }
 
-void ParticleSystem::AddForceField(const std::function<Eigen::VectorXd&(const Eigen::VectorXd&)>& forceField)
-{
-  mForceFields.push_back(forceField);
-}
-
 void ParticleSystem::Animate()
 {
   int N = mNumParticles - 1;
   Eigen::VectorXd C(N + 3);
+  Eigen::MatrixXd Fext(2, N+1);
 
   ConstraintFunc(mX, C);
-
+  ExternalForces(mX, Fext);
 }
 
 void ParticleSystem::Render() const
@@ -96,17 +92,15 @@ void ParticleSystem::Render() const
 
 void ParticleSystem::ExternalForces(const Eigen::MatrixXd& X, Eigen::MatrixXd& Fext)
 {
-  Fext.setZero();
-
-  // For each force field,
-  for (auto F : mForceFields)
+  // Evaluate to every particle.
+  for (int i = 0; i < mNumParticles; i++)
   {
-    // Evaluate to every particle.
-    for (int i = 0; i < mNumParticles; i++)
-    {
-      Fext.col(i) += F(X.col(i);
-    }
+    Fext.col(i) = Eigen::Vector2d(0.0, -1.0);
   }
+
+  // TODO: add mouse force.
+
+  std::cout << "Fext:\n" << Fext << std::endl;
 }
 
 void ParticleSystem::ConstraintFunc(const Eigen::MatrixXd& X, Eigen::VectorXd& C)

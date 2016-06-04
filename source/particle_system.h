@@ -26,8 +26,6 @@ public:
   void Setup(int numParticles, const Eigen::Vector2d& Xc, const Eigen::Vector2d& Xpin,
              double radius = 0.5, double totalLength = 1.0);
 
-  void AddForceField(const std::function<Eigen::VectorXd&(const Eigen::VectorXd&)>& forceField);
-
   void Animate();
   void Render() const;
 
@@ -65,9 +63,6 @@ private:
   Eigen::Vector2d mPinPosition;
   double mRingRadius;
   double mLength;
-
-  // Force fields.
-  std::vector<std::function<Eigen::VectorXd&(const Eigen::VectorXd&)>> mForceFields;
 
 };
 
