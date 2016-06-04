@@ -2,7 +2,8 @@
 
 using Eigen::Matrix2Xd;
 
-void ParticleSystem::Setup(int numParticles, const Eigen::Vector2d& Xc, double radius)
+void ParticleSystem::Setup(int numParticles, const Eigen::Vector2d& Xc, const Eigen::Vector2d& Xpin,
+                           double radius, double totalLength)
 {
   mNumParticles = ((numParticles > 1) ? numParticles : 11) + 1;
   int N = numParticles;
@@ -12,16 +13,17 @@ void ParticleSystem::Setup(int numParticles, const Eigen::Vector2d& Xc, double r
   double x_max = 0.5;
 
   // Initialize particle coordinates and velocities.
-  mLength = 1.5*M_PI*radius/N;
+  // mLength = 1.5*M_PI*radius/N;
+  mLength = totalLength/N;
+  double arcTheta = totalLength/radius;
 
+  // Distribute particles along the input ring (circle).
   for (int i = 0; i < mNumParticles; i++)
   {
-    double theta = 1.5*M_PI*static_cast<double>(i)/N;
-    // mX(0, i) = 2 * x_max * (static_cast<double>(i)/(mNumParticles-1)) - x_max;
-    // mX(1, i) = 0.0;
+    double theta = arcTheta*static_cast<double>(i)/N;
     mX(0, i) = radius * sin(theta) + Xc(0);
     mX(1, i) = radius * cos(theta) + Xc(1);
-    
+
     std::cout << "x: " << mX(0, i) << ", y: " << mX(1, i) << std::endl;
 
     mV(0, i) = 0.0;
@@ -45,6 +47,7 @@ void ParticleSystem::Setup(int numParticles, const Eigen::Vector2d& Xc, double r
   // Initialize ring and load its mesh.
   int ns = 100;
   mRingCenter = Xc;
+  mPinPosition = Xpin;
   mRingRadius = radius;
   Eigen::Matrix2Xd Xr(2, ns);
   for (int i = 0; i < ns; i++)
@@ -63,10 +66,18 @@ void ParticleSystem::Setup(int numParticles, const Eigen::Vector2d& Xc, double r
   mRing->SetMeshOwner(true);
 }
 
+void ParticleSystem::AddForceField(const std::function<Eigen::VectorXd&(const Eigen::VectorXd&)>& forceField)
+{
+  mForceFields.push_back(forceField);
+}
+
 void ParticleSystem::Animate()
 {
+  int N = mNumParticles - 1;
+  Eigen::VectorXd C(N + 3);
 
-  
+  ConstraintFunc(mX, C);
+
 }
 
 void ParticleSystem::Render() const
@@ -83,9 +94,66 @@ void ParticleSystem::Render() const
 
 }
 
+void ParticleSystem::ExternalForces(const Eigen::MatrixXd& X, Eigen::MatrixXd& Fext)
+{
+  Fext.setZero();
+
+  // For each force field,
+  for (auto F : mForceFields)
+  {
+    // Evaluate to every particle.
+    for (int i = 0; i < mNumParticles; i++)
+    {
+      Fext.col(i) += F(X.col(i);
+    }
+  }
+}
+
+void ParticleSystem::ConstraintFunc(const Eigen::MatrixXd& X, Eigen::VectorXd& C)
+{
+  Eigen::VectorXd C_rigid, C_pin;
+  double C_ring;
+
+  ParticleSystem::ConstraintRigid(mX, C_rigid);
+  C_ring = ParticleSystem::ConstraintRing(mX);
+  ParticleSystem::ConstraintPin(mX, C_pin);
+
+  // std::cout << "C_rigid:\n" << C_rigid << std::endl;
+  // std::cout << "C_ring:\n" << C_ring << std::endl;
+  // std::cout << "C_pin:\n" << C_pin << std::endl;
+
+  C << C_rigid,
+       C_pin,
+       C_ring;
+
+  std::cout << "C(x):\n" << C << std::endl;
+}
+
+void ParticleSystem::ConstraintRigid(const Eigen::MatrixXd& X, Eigen::VectorXd& C_rigid)
+{
+  int N = mNumParticles-1;
+  int H = X.rows();
+  // C_rigid(x) = || X(i) - X(i+1) ||^2 - L^2;
+  C_rigid = ((X.block(0, 0, H, N) - X.block(0, 1, H, N)).colwise().squaredNorm());
+  C_rigid = C_rigid.array() - pow(mLength, 2.0);
+}
+
+double ParticleSystem::ConstraintRing (const Eigen::MatrixXd& X)
+{
+  int N = mNumParticles - 1;
+  return  (X.col(N) - mRingCenter).squaredNorm() - pow(mRingRadius, 2.0);
+}
+
+void ParticleSystem::ConstraintPin(const Eigen::MatrixXd& X, Eigen::VectorXd& C_pin)
+{
+  C_pin = X.col(0) - mPinPosition;
+}
+
 ParticleSystem::~ParticleSystem()
 {
-
+  delete mRing;
+  delete mConnector;
+  delete mParticleObj;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

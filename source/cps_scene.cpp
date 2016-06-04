@@ -35,7 +35,6 @@ void CPSScene::Init(BasicPipelineProgram* pipelineProgram, GLuint programHandle)
 
   sky->Load("textures/outer_space.jpg");
 
-
   // terrain->SetLighting(true);
   sky->SetLighting(false);
 
@@ -45,7 +44,7 @@ void CPSScene::Init(BasicPipelineProgram* pipelineProgram, GLuint programHandle)
 
   // Initialie particle system here.
   mParticleSystem = new ParticleSystem(pipelineProgram, programHandle);
-  mParticleSystem->Setup(11, Eigen::Vector2d(0, -0.5));
+  mParticleSystem->Setup(11, {0, -.5}, {.0, .0});
 
   mInitialized = true;
 }

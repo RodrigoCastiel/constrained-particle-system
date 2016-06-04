@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <vector>
+#include <functional>
 #include <Eigen/Dense>
 #include "basic_obj_library.h"
 
@@ -21,10 +23,30 @@ public:
   { }
 
   // Sets up the system according to the number of particles and circle position. 
-  void Setup(int numParticles, const Eigen::Vector2d& Xc, double radius = 0.5);
+  void Setup(int numParticles, const Eigen::Vector2d& Xc, const Eigen::Vector2d& Xpin,
+             double radius = 0.5, double totalLength = 1.0);
+
+  void AddForceField(const std::function<Eigen::VectorXd&(const Eigen::VectorXd&)>& forceField);
 
   void Animate();
   void Render() const;
+
+  // Physical differential equations + constraint computation.
+
+  // Computes the summation of all forces exerted by force fields and mouse.
+  void ExternalForces(const Eigen::MatrixXd& X, Eigen::MatrixXd& Fext);
+
+  // Computes the constraints for the particle system. It has to be ZERO.
+  // Input: x. Output: C(x) to C.
+  void ConstraintFunc(const Eigen::MatrixXd& X, Eigen::VectorXd& C);
+
+  // // Computes the gradient of the constraint with respect to x.
+  // // Input: x. Output: dC/dx to gradC.
+  // void GradConstraint(const Eigen::VectorXd& C, Eigen::MatrixXd& gradC);
+
+  void ConstraintRigid(const Eigen::MatrixXd& X, Eigen::VectorXd& C_rigid);
+  void ConstraintPin(const Eigen::MatrixXd& X, Eigen::VectorXd& C_pin);
+  double ConstraintRing(const Eigen::MatrixXd& X);
 
   ~ParticleSystem();
 
@@ -40,8 +62,13 @@ private:
   Eigen::Matrix2Xd mX;  // Positions.
   Eigen::Matrix2Xd mV;  // Velocities.
   Eigen::Vector2d mRingCenter;
+  Eigen::Vector2d mPinPosition;
   double mRingRadius;
   double mLength;
+
+  // Force fields.
+  std::vector<std::function<Eigen::VectorXd&(const Eigen::VectorXd&)>> mForceFields;
+
 };
 
 class ConnectorsMesh : public Mesh
