@@ -24,8 +24,6 @@ void ParticleSystem::Setup(int numParticles, const Eigen::Vector2d& Xc, const Ei
     mX(0, i) = radius * sin(theta) + Xc(0);
     mX(1, i) = radius * cos(theta) + Xc(1);
 
-    std::cout << "x: " << mX(0, i) << ", y: " << mX(1, i) << std::endl;
-
     mV(0, i) = 0.0;
     mV(1, i) = 0.0;
   }
@@ -71,8 +69,11 @@ void ParticleSystem::Animate()
   int N = mNumParticles - 1;
   Eigen::VectorXd C(N + 3);
   Eigen::MatrixXd Fext(2, N+1);
+  Eigen::MatrixXd gradC(N+3, 2*N + 2);
 
   ConstraintFunc(mX, C);
+  ConstraintGrad(mX, gradC);
+
   ExternalForces(mX, Fext);
 }
 
@@ -100,7 +101,7 @@ void ParticleSystem::ExternalForces(const Eigen::MatrixXd& X, Eigen::MatrixXd& F
 
   // TODO: add mouse force.
 
-  std::cout << "Fext:\n" << Fext << std::endl;
+  std::cout << "Fext = \n" << Fext << std::endl;
 }
 
 void ParticleSystem::ConstraintFunc(const Eigen::MatrixXd& X, Eigen::VectorXd& C)
@@ -108,19 +109,34 @@ void ParticleSystem::ConstraintFunc(const Eigen::MatrixXd& X, Eigen::VectorXd& C
   Eigen::VectorXd C_rigid, C_pin;
   double C_ring;
 
-  ParticleSystem::ConstraintRigid(mX, C_rigid);
-  C_ring = ParticleSystem::ConstraintRing(mX);
-  ParticleSystem::ConstraintPin(mX, C_pin);
+  ParticleSystem::ConstraintRigid(X, C_rigid);
+  C_ring = ParticleSystem::ConstraintRing(X);
+  ParticleSystem::ConstraintPin(X, C_pin);
 
-  // std::cout << "C_rigid:\n" << C_rigid << std::endl;
-  // std::cout << "C_ring:\n" << C_ring << std::endl;
-  // std::cout << "C_pin:\n" << C_pin << std::endl;
-
+  // Should always be 0.
   C << C_rigid,
        C_pin,
        C_ring;
 
-  std::cout << "C(x):\n" << C << std::endl;
+  std::cout << "C(x) = \n" << C << std::endl;
+}
+
+void ParticleSystem::ConstraintGrad(const Eigen::MatrixXd& X, Eigen::MatrixXd& gradC)
+{
+  int N = mNumParticles - 1;
+  Eigen::VectorXd gradC_ring(2*N + 2);
+  Eigen::MatrixXd gradC_pin(2, 2*N + 2);
+  Eigen::MatrixXd gradC_rigid(N, 2*N+2);
+
+  ParticleSystem::ConstraintRigidGrad(X, gradC_rigid);
+  ParticleSystem::ConstraintRingGrad(X, gradC_ring);
+  ParticleSystem::ConstraintPinGrad(X, gradC_pin);
+
+  gradC << gradC_rigid,
+           gradC_pin,
+           gradC_ring.transpose();
+
+  std::cout << "gradC = \n" << gradC << std::endl;
 }
 
 void ParticleSystem::ConstraintRigid(const Eigen::MatrixXd& X, Eigen::VectorXd& C_rigid)
@@ -141,6 +157,54 @@ double ParticleSystem::ConstraintRing (const Eigen::MatrixXd& X)
 void ParticleSystem::ConstraintPin(const Eigen::MatrixXd& X, Eigen::VectorXd& C_pin)
 {
   C_pin = X.col(0) - mPinPosition;
+}
+
+void ParticleSystem::ConstraintRigidGrad(const Eigen::MatrixXd& X, Eigen::MatrixXd& gradC_rigid)
+{
+  int N = mNumParticles - 1;
+  gradC_rigid.setZero();
+
+  for (int i = 0; i < N; i++)
+  {
+    // Main diagonal (with respect to x).     dC/dxi
+    gradC_rigid(i, i)   = 2*( X(0, i) - X(0, i+1) );
+
+    // Diagonal above main diagonal (with respect to x).    dC/dx(i+1)  
+    gradC_rigid(i, i+1) = -gradC_rigid(i, i);  
+
+    // Main diagonal (with respect to y).     dC/dyi
+    gradC_rigid(i, i+N+1)   = 2*( X(1, i) - X(1, i+1) );
+
+    // Diagonal above main diagonal (with respect to y).    dC/dy(i+1)  
+    gradC_rigid(i, i+1+N+1) = -gradC_rigid(i, i);  
+
+  }
+
+  // std::cout << "gradC_rigid = \n" << gradC_rigid << std::endl;
+}
+
+void ParticleSystem::ConstraintPinGrad(const Eigen::MatrixXd& X, Eigen::MatrixXd& gradC_pin)
+{
+  int N = mNumParticles - 1;
+  gradC_pin.setZero();
+  gradC_pin(0, 0)   = 1;
+  gradC_pin(1, N+1) = 1;
+  // std::cout << "gradC_pin = \n" << gradC_pin << std::endl;
+}
+
+void ParticleSystem::ConstraintRingGrad(const Eigen::MatrixXd& X, Eigen::VectorXd& gradC_ring)
+{
+  int N = mNumParticles - 1;
+  double xn = X(0, N);
+  double yn = X(1, N);
+  double xRing = mRingCenter(0);
+  double yRing = mRingCenter(1);
+
+  double dC_dxn = 2*(xn - xRing);
+  double dC_dyn = 2*(yn - yRing);
+
+  gradC_ring << Eigen::VectorXd::Zero(N), dC_dxn, Eigen::VectorXd::Zero(N), dC_dyn;
+  // std::cout << "gradC_ring = \n" << gradC_ring.transpose() << std::endl;
 }
 
 ParticleSystem::~ParticleSystem()

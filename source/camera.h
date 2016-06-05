@@ -51,7 +51,7 @@ public:
 
 private:
   // View parameters
-  glm::vec3 mPos {   0.0f, -.5f, 2.0f};      // Center coordinates.
+  glm::vec3 mPos {   0.0f, -0.5f, 2.0f};      // Center coordinates.
   glm::vec3 mRot {   0.0f, 0.0f,  0.0f};      // Rotation angles.
   glm::vec3 mDir {   0.0f, 0.0f, -1.0f};      // Direction.
   glm::vec3 mUpVec { 0.0f, 1.0f,  0.0f};      // Up vector.

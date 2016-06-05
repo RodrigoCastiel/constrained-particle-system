@@ -38,13 +38,18 @@ public:
   // Input: x. Output: C(x) to C.
   void ConstraintFunc(const Eigen::MatrixXd& X, Eigen::VectorXd& C);
 
-  // // Computes the gradient of the constraint with respect to x.
-  // // Input: x. Output: dC/dx to gradC.
-  // void GradConstraint(const Eigen::VectorXd& C, Eigen::MatrixXd& gradC);
+  // Computes the gradient of the constraint with respect to x.
+  // Input: x. Output: dC/dx to gradC.
+  void ConstraintGrad(const Eigen::MatrixXd& X, Eigen::MatrixXd& gradC);
+
 
   void ConstraintRigid(const Eigen::MatrixXd& X, Eigen::VectorXd& C_rigid);
   void ConstraintPin(const Eigen::MatrixXd& X, Eigen::VectorXd& C_pin);
   double ConstraintRing(const Eigen::MatrixXd& X);
+
+  void ConstraintRigidGrad(const Eigen::MatrixXd& X, Eigen::MatrixXd& gradC_rigid);
+  void ConstraintPinGrad(const Eigen::MatrixXd& X, Eigen::MatrixXd& gradC_pin);
+  void ConstraintRingGrad(const Eigen::MatrixXd& X, Eigen::VectorXd& gradC_ring);
 
   ~ParticleSystem();
 
