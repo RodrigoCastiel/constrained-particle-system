@@ -139,6 +139,12 @@ void ParticleSystem::ConstraintGrad(const Eigen::MatrixXd& X, Eigen::MatrixXd& g
   std::cout << "gradC = \n" << gradC << std::endl;
 }
 
+void DiffConstraintGrad(const Eigen::MatrixXd& X, const Eigen::MatrixXd& V, 
+                        Eigen::MatrixXd& grad_dC)
+{
+
+}
+
 void ParticleSystem::ConstraintRigid(const Eigen::MatrixXd& X, Eigen::VectorXd& C_rigid)
 {
   int N = mNumParticles-1;
@@ -205,6 +211,24 @@ void ParticleSystem::ConstraintRingGrad(const Eigen::MatrixXd& X, Eigen::VectorX
 
   gradC_ring << Eigen::VectorXd::Zero(N), dC_dxn, Eigen::VectorXd::Zero(N), dC_dyn;
   // std::cout << "gradC_ring = \n" << gradC_ring.transpose() << std::endl;
+}
+
+void ParticleSystem::DiffConstraintRigidGrad(const Eigen::MatrixXd& X, const Eigen::MatrixXd& V, 
+                                             Eigen::MatrixXd& grad_dC_rigid)
+{
+
+}
+
+void ParticleSystem::DiffConstraintRingGrad( const Eigen::MatrixXd& X, const Eigen::MatrixXd& V, 
+                                             Eigen::VectorXd& grad_dC_ring)
+{
+
+}
+
+void ParticleSystem::DiffConstraintPinGrad(  const Eigen::MatrixXd& X, const Eigen::MatrixXd& V, 
+                                             Eigen::MatrixXd& grad_dC_pin)
+{
+
 }
 
 ParticleSystem::~ParticleSystem()

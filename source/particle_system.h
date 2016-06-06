@@ -42,14 +42,25 @@ public:
   // Input: x. Output: dC/dx to gradC.
   void ConstraintGrad(const Eigen::MatrixXd& X, Eigen::MatrixXd& gradC);
 
+  // Computes the gradient with respect to x of the derivative of the constraint with respect to x.
+  // Input: X and V. Output grad (dC/dt) to grad_dC.
+  void DiffConstraintGrad(const Eigen::MatrixXd& X, const Eigen::MatrixXd& V, Eigen::MatrixXd& grad_dC);
 
+
+  // Methods for computing constraint vector parts.
   void ConstraintRigid(const Eigen::MatrixXd& X, Eigen::VectorXd& C_rigid);
   void ConstraintPin(const Eigen::MatrixXd& X, Eigen::VectorXd& C_pin);
   double ConstraintRing(const Eigen::MatrixXd& X);
 
+  // Methods for computing consraint gradient parts.
   void ConstraintRigidGrad(const Eigen::MatrixXd& X, Eigen::MatrixXd& gradC_rigid);
   void ConstraintPinGrad(const Eigen::MatrixXd& X, Eigen::MatrixXd& gradC_pin);
   void ConstraintRingGrad(const Eigen::MatrixXd& X, Eigen::VectorXd& gradC_ring);
+
+  // Methods for computing gradient of derivative of constraint with respect to time.
+  void DiffConstraintRigidGrad(const Eigen::MatrixXd& X, const Eigen::MatrixXd& V, Eigen::MatrixXd& grad_dC_rigid);
+  void DiffConstraintRingGrad( const Eigen::MatrixXd& X, const Eigen::MatrixXd& V, Eigen::VectorXd& grad_dC_ring);
+  void DiffConstraintPinGrad(  const Eigen::MatrixXd& X, const Eigen::MatrixXd& V, Eigen::MatrixXd& grad_dC_pin);
 
   ~ParticleSystem();
 
