@@ -73,6 +73,7 @@ private:
 
   // Physical Simulation data.
   int mNumParticles { 0 };
+  Eigen::MatrixXd mM;   // Mass matrix.
   Eigen::Matrix2Xd mX;  // Positions.
   Eigen::Matrix2Xd mV;  // Velocities.
   Eigen::Vector2d mRingCenter;
@@ -80,6 +81,8 @@ private:
   double mRingRadius;
   double mLength;
 
+  double mTimeStep { 0.01 };
+  double mDamping { 1 };
 };
 
 class ConnectorsMesh : public Mesh
