@@ -25,6 +25,8 @@ public:
   void OnMouseLeftClick(int x, int y, int w, int h);
   void OnMouseRightClick(int x, int y, int w, int h);
 
+  void UpdateSystem() { mParticleSystem->Animate(); }
+
   virtual ~CPSScene() { Scene::Clean(); }
 
 public:

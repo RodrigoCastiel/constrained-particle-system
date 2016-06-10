@@ -44,7 +44,7 @@ void CPSScene::Init(BasicPipelineProgram* pipelineProgram, GLuint programHandle)
 
   // Initialie particle system here.
   mParticleSystem = new ParticleSystem(pipelineProgram, programHandle);
-  mParticleSystem->Setup(11, {0, -.5}, {.0, .0});
+  mParticleSystem->Setup(8, {0, -.5}, {.0, .0});
 
   mInitialized = true;
 }
@@ -69,7 +69,11 @@ void CPSScene::Render()
 void CPSScene::Animate()
 {
   Scene::Animate();
-  mParticleSystem->Animate();
+
+  for (int i = 0; i < 10; i++)
+  {
+    mParticleSystem->Animate();
+  }
 }
 
 void CPSScene::OnMouseLeftClick(int x, int y, int w, int h)

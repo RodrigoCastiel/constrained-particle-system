@@ -19,13 +19,12 @@ void ParticleSystem::Setup(int numParticles, const Eigen::Vector2d& Xc, const Ei
   double mass = 1.0/(N+1);
 
   mM = Eigen::MatrixXd::Zero(2*N+2, 2*N+2);
-  for (int i = 0; i < N+1; i++)
+  for (int i = 0; i < 2*(N+1); i++)
   {
-    mM(2*i, i) = mass;
-    mM(2*i+1, i+N+1) = mass;
+    mM(i, i) = mass;
   }
 
-  std::cout << "M = \n" << mM << std::endl;
+  // std::cout << "M = \n" << mM << std::endl;
 
   // Distribute particles along the input ring (circle).
   for (int i = 0; i < mNumParticles; i++)
@@ -33,6 +32,9 @@ void ParticleSystem::Setup(int numParticles, const Eigen::Vector2d& Xc, const Ei
     double theta = arcTheta*static_cast<double>(i)/N;
     mX(0, i) = radius * sin(theta) + Xc(0);
     mX(1, i) = radius * cos(theta) + Xc(1);
+
+    // mX(0, i) = 0.0;
+    // mX(1, i) = -static_cast<double>(i)/N;
 
     mV(0, i) = 0.0;
     mV(1, i) = 0.0;
@@ -76,6 +78,9 @@ void ParticleSystem::Setup(int numParticles, const Eigen::Vector2d& Xc, const Ei
 
 void ParticleSystem::Animate()
 {
+  static int frame = 0;
+  std::cout << "FRAME ..................... " << frame++ << std::endl;
+
   int N = mNumParticles - 1;
   Eigen::VectorXd C(N + 3);
   Eigen::MatrixXd Fext(2, N+1);
@@ -102,12 +107,12 @@ void ParticleSystem::Animate()
        mV.row(1).transpose();
 
   // Baumgarte Stabilization to avoid drift.
-  double b = 10;//mDamping;  // Damping parameter.  
+  double b = 0.01;//mDamping;  // Damping parameter.  
   d << Fext.row(0).transpose(),                      // d =  |                    fx                     | 
        Fext.row(1).transpose(),                      //      |                    fy                     |
-       (-(grad_dC * v) - 2*b*(gradC * v) - b*b*C );  //      |  - ddC/dx * x' - 2b* dC/dx * x' - b^2 * C |
+       -((grad_dC * v) + 2*b*(gradC * v) + b*b*C );  //      |  - ddC/dx * x' - 2b* dC/dx * x' - b^2 * C |
 
-  Eigen::VectorXd w = A.colPivHouseholderQr().solve(w);
+  Eigen::VectorXd w = A.colPivHouseholderQr().solve(d);
   Eigen::MatrixXd accel(2, N+1);
   Eigen::VectorXd lambda(N+3);
 
@@ -115,38 +120,50 @@ void ParticleSystem::Animate()
            w.segment(N+1, N+1).transpose();
 
   lambda << w.segment(2*N+2, N+3);
-  Eigen::VectorXd fc = gradC.transpose() * lambda;  // Constraint force.
+  Eigen::VectorXd fc = (gradC.transpose() * lambda);  // Constraint force.
   Eigen::MatrixXd Fc(2, N+1);
   Fc << fc.segment(0, N+1).transpose(), 
         fc.segment(N+1, N+1).transpose();
 
+  Eigen::VectorXd fext(2*N+2);
+
+  fext << Fext.row(0).transpose(),
+          Fext.row(1).transpose();
+
   // Integrate acceleration to find velocities and integrate velocities to update positions.
   double m = 1.0/(N+1);
-  double dt = 0.01;//mTimeStep;
-  mV += ( (dt/m) * (Fext) );
+  double dt = 5e-4;
+  mV += ( dt * accel );
+  // mV += ( dt * (Fext - Fc)/m );
   mX += ( dt * mV );
-  // mV += Eigen::MatrixXd::Constant(2, N+1, 0.01);
 
-  std::cout << "mX = \n" << mX << std::endl;
-  std::cout << "mV = \n" << mV << std::endl;
-  std::cout << "Fc = \n" << Fc << std::endl;
+  double maxFcX = Fc.row(0).maxCoeff();
+  double maxFcY = Fc.row(1).maxCoeff();
+  //std::cout << "Determinant(A) = " << A.determinant() << std::endl;
+  std::cout << "Max(FcX) = " << maxFcX << std::endl;
+  std::cout << "Max(FcY) = " << maxFcY << std::endl;
+  // std::cout << "Fc = \n" << Fc << std::endl;
 
-  // std::cout << "A = \n" << A << std::endl;
+  // std::cout << "x'' = \n" << accel << std::endl;
+  // std::cout << "q'' = \n" << (mM.inverse() * (fext - fc)).transpose() << std::endl;
+  // // std::cout << "[x''; lambda] = \n" << w << std::endl;
 
-  // FILE* out = fopen("A.txt", "w");
+  // // std::cout << "Fr = \n" << Fext + Fc << std::endl;
+  // std::cout << "gradC   = \n" << gradC << std::endl;
+  // std::cout << "grad_dC = \n" << grad_dC << std::endl;
+  
+  std::cout << "Max(C)       = " << C.maxCoeff() << std::endl;
+  std::cout << "Max(gradC)   = " << gradC.maxCoeff() << std::endl;
+  std::cout << "Max(grad_dC) = " << grad_dC.maxCoeff() << std::endl;
+  // std::cout << "lambda = \n" << lambda.transpose() << std::endl;
 
-  // for (int i = 0; i < A.rows(); i++)
-  // {
-  //   for (int j = 0; j < A.cols(); j++)
-  //   {
-  //     fprintf(out, "%9.6f ", A(i, j));
-  //   }
-  //   fprintf(out, "\n");
-  // }
+  //assert((mM*(w.segment(0, 2*N+2)) + fc).isApprox(d.segment(0, 2*N+2)));
 
-  // fclose(out);
-
-  // exit(0);
+  if (std::max(maxFcX, maxFcY) > 1e5)
+  {
+    std::cout << "Numerical instability.\n";
+    //exit(0);
+  }
 
   dynamic_cast<ConnectorsMesh*>(mConnector->GetMesh())->Update(mX);
 }
@@ -189,12 +206,15 @@ void ParticleSystem::ConstraintFunc(const Eigen::MatrixXd& X, Eigen::VectorXd& C
   C_ring = ParticleSystem::ConstraintRing(X);
   ParticleSystem::ConstraintPin(X, C_pin);
 
+  // C_rigid *= 0;
+  // C_ring  *= 0;
+
   // Should always be 0.
   C << C_rigid,
        C_pin,
        C_ring;
 
-  std::cout << "C(x) = \n" << C << std::endl;
+  std::cout << "| C(x) |^2 = \n" << C.squaredNorm() << std::endl;
 }
 
 void ParticleSystem::ConstraintGrad(const Eigen::MatrixXd& X, Eigen::MatrixXd& gradC)
@@ -208,11 +228,14 @@ void ParticleSystem::ConstraintGrad(const Eigen::MatrixXd& X, Eigen::MatrixXd& g
   ParticleSystem::ConstraintRingGrad(X, gradC_ring);
   ParticleSystem::ConstraintPinGrad(X, gradC_pin);
 
+  // gradC_rigid *= 0;
+  // gradC_ring  *= 0;
+
   gradC << gradC_rigid,
            gradC_pin,
            gradC_ring.transpose();
 
-  //std::cout << "gradC = \n" << gradC << std::endl;
+  // std::cout << "gradC = \n" << gradC << std::endl;
 }
 
 void ParticleSystem::DiffConstraintGrad(const Eigen::MatrixXd& X, const Eigen::MatrixXd& V, 
@@ -226,6 +249,9 @@ void ParticleSystem::DiffConstraintGrad(const Eigen::MatrixXd& X, const Eigen::M
   ParticleSystem::DiffConstraintRigidGrad(X, V, grad_dC_rigid);
   ParticleSystem::DiffConstraintRingGrad( X, V, grad_dC_ring);
   ParticleSystem::DiffConstraintPinGrad(  X, V, grad_dC_pin);
+
+  // grad_dC_rigid *= 0;
+  // grad_dC_ring  *= 0;
 
   grad_dC << grad_dC_rigid,
              grad_dC_pin,
@@ -271,7 +297,6 @@ void ParticleSystem::ConstraintRigidGrad(const Eigen::MatrixXd& X, Eigen::Matrix
 
     // Diagonal above main diagonal (with respect to y).    dC/dy(i+1)  
     gradC_rigid(i, i+1+N+1) = -gradC_rigid(i, i+N+1);  
-
   }
 
   // std::cout << "gradC_rigid = \n" << gradC_rigid << std::endl;
@@ -289,13 +314,8 @@ void ParticleSystem::ConstraintPinGrad(const Eigen::MatrixXd& X, Eigen::MatrixXd
 void ParticleSystem::ConstraintRingGrad(const Eigen::MatrixXd& X, Eigen::VectorXd& gradC_ring)
 {
   int N = mNumParticles - 1;
-  double xn = X(0, N);
-  double yn = X(1, N);
-  double xRing = mRingCenter(0);
-  double yRing = mRingCenter(1);
-
-  double dC_dxn = 2*(xn - xRing);
-  double dC_dyn = 2*(yn - yRing);
+  double dC_dxn = 2*(X(0, N) - mRingCenter(0));
+  double dC_dyn = 2*(X(1, N) - mRingCenter(1));
 
   gradC_ring << Eigen::VectorXd::Zero(N), dC_dxn, Eigen::VectorXd::Zero(N), dC_dyn;
   // std::cout << "gradC_ring = \n" << gradC_ring.transpose() << std::endl;
@@ -313,14 +333,13 @@ void ParticleSystem::DiffConstraintRigidGrad(const Eigen::MatrixXd& X, const Eig
     grad_dC_rigid(i, i) = 2*( V(0, i) - V(0, i+1) );
 
     // Diagonal above main diagonal (with respect to x).    dC/dx(i+1)  
-    grad_dC_rigid(i, i+1) = -grad_dC_rigid(i, i);  
+    grad_dC_rigid(i, i+1) = -2*( V(0, i) - V(0, i+1) );  
 
     // Main diagonal (with respect to y).     dC/dyi
     grad_dC_rigid(i, i+N+1) = 2*( V(1, i) - V(1, i+1) );
 
     // Diagonal above main diagonal (with respect to y).    dC/dy(i+1)  
-    grad_dC_rigid(i, i+1+N+1) = -grad_dC_rigid(i, i+N+1);  
-
+    grad_dC_rigid(i, i+1+N+1) = -2*( V(1, i) - V(1, i+1) );  
   }
 
   // std::cout << "grad_dC_rigid = \n" << grad_dC_rigid << std::endl;
@@ -330,15 +349,10 @@ void ParticleSystem::DiffConstraintRingGrad( const Eigen::MatrixXd& X, const Eig
                                              Eigen::VectorXd& grad_dC_ring)
 {
   int N = mNumParticles - 1;
-  double vxn = V(0, N);
-  double vyn = V(1, N);
-
-  double ddC_dxn = 2*vxn;
-  double ddC_dyn = 2*vyn;
-
+  double ddC_dxn = 2*V(0, N);
+  double ddC_dyn = 2*V(1, N);
   grad_dC_ring << Eigen::VectorXd::Zero(N), ddC_dxn, Eigen::VectorXd::Zero(N), ddC_dyn;
   // std::cout << "grad_dC_ring = \n" << grad_dC_ring.transpose() << std::endl;
-
 }
 
 void ParticleSystem::DiffConstraintPinGrad(  const Eigen::MatrixXd& X, const Eigen::MatrixXd& V, 
