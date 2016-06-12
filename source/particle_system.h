@@ -30,7 +30,8 @@ public:
   void Render() const;
 
   void TogglePauseSimulation() { mPaused = !mPaused; }
-  void SelectParticle(const glm::vec3 & C, const glm::vec3 & ray);
+  void SelectParticle(const glm::vec3 & C, const glm::vec3 & ray, int state);
+  void DragParticle(const glm::vec3 & C, const glm::vec3 & ray);
 
 
   // Physical differential equations + constraint computation.
@@ -77,7 +78,7 @@ private:
   SceneObject* mRing           { nullptr };
 
   int mSelectedParticle  { -1 };
-  Eigen::Vector2d mForce;
+  Eigen::Vector2d mMouseForce;
 
   // Physical Simulation data.
   int mNumParticles { 0 };
