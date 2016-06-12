@@ -157,9 +157,7 @@ void CPSProgram::KeyboardFunc(unsigned char key, int x, int y)
   switch (key)
   {
     case ' ':
-      // std::cout << "You pressed the spacebar." << std::endl;
-      // mVideoRecorder->ToggleRecord();
-      mScene->UpdateSystem();
+      mScene->TogglePauseSimulation();
     break;
 
     case 'c':

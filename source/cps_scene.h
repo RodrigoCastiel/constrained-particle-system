@@ -26,6 +26,7 @@ public:
   void OnMouseRightClick(int x, int y, int w, int h);
 
   void UpdateSystem() { mParticleSystem->Animate(); }
+  void TogglePauseSimulation() { mParticleSystem->TogglePauseSimulation(); }
 
   virtual ~CPSScene() { Scene::Clean(); }
 

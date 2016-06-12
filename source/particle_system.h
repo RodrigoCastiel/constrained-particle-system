@@ -29,7 +29,12 @@ public:
   void Animate();
   void Render() const;
 
+  void TogglePauseSimulation() { mPaused = !mPaused; }
+  void SelectParticle(const glm::vec3 & C, const glm::vec3 & ray);
+
+
   // Physical differential equations + constraint computation.
+  void ExplicitEulerIntegration();
 
   // Computes the summation of all forces exerted by force fields and mouse.
   void ExternalForces(const Eigen::MatrixXd& X, Eigen::MatrixXd& Fext);
@@ -71,6 +76,9 @@ private:
   SceneObject* mConnector      { nullptr };
   SceneObject* mRing           { nullptr };
 
+  int mSelectedParticle  { -1 };
+  Eigen::Vector2d mForce;
+
   // Physical Simulation data.
   int mNumParticles { 0 };
   Eigen::MatrixXd mM;   // Mass matrix.
@@ -81,8 +89,9 @@ private:
   double mRingRadius;
   double mLength;
 
-  double mTimeStep { 0.01 };
+  double mTimeStep { 1e-4 };
   double mDamping { 1 };
+  bool mPaused { false };
 };
 
 class ConnectorsMesh : public Mesh

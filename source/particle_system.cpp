@@ -79,7 +79,31 @@ void ParticleSystem::Setup(int numParticles, const Eigen::Vector2d& Xc, const Ei
 void ParticleSystem::Animate()
 {
   static int frame = 0;
-  std::cout << "FRAME ..................... " << frame++ << std::endl;
+  std::cout << "FRAME ________________________ " << frame++ << std::endl;
+
+  if (!mPaused)
+  {
+    for (int i = 0; i < 20; i++)
+    {
+      ParticleSystem::ExplicitEulerIntegration();
+    }
+
+    dynamic_cast<ConnectorsMesh*>(mConnector->GetMesh())->Update(mX);
+  }
+}
+
+void ParticleSystem::Render() const
+{
+  // Render one sphere for each particle.
+  for (int i = 0; i < mNumParticles; i++)
+  {
+    mParticleObj->SetPosition(mX(0, i), mX(1, i), 0);
+    mParticleObj->Animate();
+    mParticleObj->Render();
+    mConnector->Render();
+    mRing->Render();
+  }
+}
 
   int N = mNumParticles - 1;
   Eigen::VectorXd C(N + 3);
@@ -107,7 +131,7 @@ void ParticleSystem::Animate()
        mV.row(1).transpose();
 
   // Baumgarte Stabilization to avoid drift.
-  double b = 0.01;//mDamping;  // Damping parameter.  
+  double b = 1e-3; // Damping parameter.  
   d << Fext.row(0).transpose(),                      // d =  |                    fx                     | 
        Fext.row(1).transpose(),                      //      |                    fy                     |
        -((grad_dC * v) + 2*b*(gradC * v) + b*b*C );  //      |  - ddC/dx * x' - 2b* dC/dx * x' - b^2 * C |
@@ -132,59 +156,27 @@ void ParticleSystem::Animate()
 
   // Integrate acceleration to find velocities and integrate velocities to update positions.
   double m = 1.0/(N+1);
-  double dt = 5e-4;
+  double dt = mTimeStep;
   mV += ( dt * accel );
-  // mV += ( dt * (Fext - Fc)/m );
   mX += ( dt * mV );
 
   double maxFcX = Fc.row(0).maxCoeff();
   double maxFcY = Fc.row(1).maxCoeff();
-  //std::cout << "Determinant(A) = " << A.determinant() << std::endl;
   std::cout << "Max(FcX) = " << maxFcX << std::endl;
-  std::cout << "Max(FcY) = " << maxFcY << std::endl;
-  // std::cout << "Fc = \n" << Fc << std::endl;
-
-  // std::cout << "x'' = \n" << accel << std::endl;
-  // std::cout << "q'' = \n" << (mM.inverse() * (fext - fc)).transpose() << std::endl;
-  // // std::cout << "[x''; lambda] = \n" << w << std::endl;
-
-  // // std::cout << "Fr = \n" << Fext + Fc << std::endl;
-  // std::cout << "gradC   = \n" << gradC << std::endl;
-  // std::cout << "grad_dC = \n" << grad_dC << std::endl;
-  
+  std::cout << "Max(FcY) = " << maxFcY << std::endl;  
   std::cout << "Max(C)       = " << C.maxCoeff() << std::endl;
   std::cout << "Max(gradC)   = " << gradC.maxCoeff() << std::endl;
   std::cout << "Max(grad_dC) = " << grad_dC.maxCoeff() << std::endl;
-  // std::cout << "lambda = \n" << lambda.transpose() << std::endl;
-
-  //assert((mM*(w.segment(0, 2*N+2)) + fc).isApprox(d.segment(0, 2*N+2)));
 
   if (std::max(maxFcX, maxFcY) > 1e5)
   {
-    std::cout << "Numerical instability.\n";
-    //exit(0);
+    std::cout << "WARNING Numerical instability.\n";
   }
-
-  dynamic_cast<ConnectorsMesh*>(mConnector->GetMesh())->Update(mX);
-}
-
-void ParticleSystem::Render() const
-{
-  // Render one sphere for each particle.
-  for (int i = 0; i < mNumParticles; i++)
-  {
-    mParticleObj->SetPosition(mX(0, i), mX(1, i), 0);
-    mParticleObj->Animate();
-    mParticleObj->Render();
-    mConnector->Render();
-    mRing->Render();
-  }
-
 }
 
 void ParticleSystem::ExternalForces(const Eigen::MatrixXd& X, Eigen::MatrixXd& Fext)
 {
-  Fext.setZero();  
+  Fext.setZero();
 
   // Evaluate to every particle.
   for (int i = 0; i < mNumParticles; i++)
