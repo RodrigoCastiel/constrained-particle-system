@@ -22,7 +22,6 @@ void CPSProgram::InitScene(int argc, char *argv[])
   mScene->Init(mPipelineProgram, mProgramHandle);
 
   // TODO: initialize particle system.
-
 }
 
 // GLUT Callback methods ----------------------------------------------------------------
@@ -58,21 +57,11 @@ void CPSProgram::MouseFunc(int button, int state, int x, int y)
 {
   GlutProgram::MouseFunc(button, state, x, y);
 
-  // NOTE: The following code was provided by the starter code.
-  // keep track of whether CTRL and SHIFT keys are pressed
   switch (glutGetModifiers())
   {
     case GLUT_ACTIVE_ALT:
         mControlState = kEDIT;
-
-        if (mMouse.mLftButton) // Clicking with left button in EDIT mode
-        {
-          mScene->OnMouseLeftClick(x, y, mWindowWidth, mWindowHeight);
-        }
-        else if (mMouse.mRgtButton) // Clicking with left button in EDIT mode
-        {
-          mScene->OnMouseRightClick(x, y, mWindowWidth, mWindowHeight);
-        }
+        mScene->OnMouseLeftClick(x, y, mWindowWidth, mWindowHeight, state);
 
     break;
 
@@ -104,6 +93,11 @@ void CPSProgram::MotionFunc(int x, int y)
   {
     // deform landscape
     case kEDIT:
+        if (mMouse.mLftButton)
+        {
+          mScene->OnMouseLeftDrag(x, y, mWindowWidth, mWindowHeight);
+        }
+
       break;
 
     // translate the landscape

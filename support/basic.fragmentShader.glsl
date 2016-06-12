@@ -1,3 +1,4 @@
+
 #version 150
 
 struct Light
@@ -36,8 +37,7 @@ void main()
 {
   if (light_on == 1)
   {
-    vec3 position = vec3(0, 3, 0);
-    vec3 normal   = normalize(vec3(0, -1, 1));
+    vec3 position = light.position;
 
     vec3 l = normalize(position - f_pos.xyz);  // Vector from frag to light.
     vec3 n = normalize(v_normal);                    //

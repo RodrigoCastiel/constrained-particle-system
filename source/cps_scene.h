@@ -22,10 +22,11 @@ public:
   void Render();
   void Animate();
 
-  void OnMouseLeftClick(int x, int y, int w, int h);
+  void OnMouseLeftClick(int x, int y, int w, int h, int state);
   void OnMouseRightClick(int x, int y, int w, int h);
 
-  void UpdateSystem() { mParticleSystem->Animate(); }
+  void OnMouseLeftDrag(int x, int y, int w, int h);
+
   void TogglePauseSimulation() { mParticleSystem->TogglePauseSimulation(); }
 
   virtual ~CPSScene() { Scene::Clean(); }

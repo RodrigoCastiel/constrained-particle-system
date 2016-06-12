@@ -42,11 +42,11 @@ void Camera::Animate()
   mViewMatrix.SetMatrixMode(OpenGLMatrix::ModelView);
   mViewMatrix.LoadIdentity();
 
+  mViewMatrix.Scale(mScale[0], mScale[1], mScale[2]);
   mViewMatrix.Translate(-mPos[0], -mPos[1], -mPos[2]);
   mViewMatrix.Rotate(-mRot[2], 0, 0, 1);
   mViewMatrix.Rotate(-mRot[0], 1, 0, 0);
   mViewMatrix.Rotate(-mRot[1], 0, 1, 0);
-  mViewMatrix.Scale(mScale[0], mScale[1], mScale[2]);
 
   // If it is linked to some object, position it correctly.
   if (mFocusObject)  

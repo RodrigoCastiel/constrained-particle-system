@@ -30,11 +30,11 @@ void ParticleSystem::Setup(int numParticles, const Eigen::Vector2d& Xc, const Ei
   for (int i = 0; i < mNumParticles; i++)
   {
     double theta = arcTheta*static_cast<double>(i)/N;
-    mX(0, i) = radius * sin(theta) + Xc(0);
-    mX(1, i) = radius * cos(theta) + Xc(1);
+    // mX(0, i) = radius * sin(theta) + Xc(0);
+    // mX(1, i) = radius * cos(theta) + Xc(1);
 
-    // mX(0, i) = 0.0;
-    // mX(1, i) = -static_cast<double>(i)/N;
+    mX(0, i) = 0.0;
+    mX(1, i) = -static_cast<double>(i)/N;
 
     mV(0, i) = 0.0;
     mV(1, i) = 0.0;
@@ -79,10 +79,11 @@ void ParticleSystem::Setup(int numParticles, const Eigen::Vector2d& Xc, const Ei
 void ParticleSystem::Animate()
 {
   static int frame = 0;
-  std::cout << "FRAME ________________________ " << frame++ << std::endl;
 
   if (!mPaused)
   {
+    // std::cout << "FRAME ________________________ " << frame++ << std::endl;
+
     for (int i = 0; i < 20; i++)
     {
       ParticleSystem::ExplicitEulerIntegration();
@@ -105,6 +106,66 @@ void ParticleSystem::Render() const
   }
 }
 
+void ParticleSystem::SelectParticle(const glm::vec3 & C, const glm::vec3 & ray, int state)
+{
+  if (state == GLUT_UP)
+  {
+    std::cout << "Releasing particle " << mSelectedParticle << std::endl;
+    mSelectedParticle = -1;
+    return;
+  }
+
+  float t = -C[2]/ray[2];
+  glm::vec3 I = C + t*ray;
+
+  for (int i = 0; i < mNumParticles; i++)
+  {
+    glm::vec3 P;
+    P[0] = mX(0, i);
+    P[1] = mX(1, i);
+    P[2] = 0.0f;
+    double dist = glm::length( I - P );
+
+    if (dist <= mLength/2.0)
+    {
+      mSelectedParticle = i;
+      const double k = 100;
+      mMouseForce(0) = k * (I[0] - P[0]);
+      mMouseForce(1) = k * (I[1] - P[1]);
+
+      std::cout << "Selected Particle = " << mSelectedParticle << std::endl;
+      std::cout << "Mouse force = \n" << mMouseForce << std::endl;
+
+      return;
+    }
+  }
+
+  mSelectedParticle = -1;
+}
+
+void ParticleSystem::DragParticle(const glm::vec3 & C, const glm::vec3 & ray)
+{
+  if (mSelectedParticle != -1)
+  {
+    float t = -C[2]/ray[2];
+    glm::vec3 I = C + t*ray;
+
+    glm::vec3 P;
+    P[0] = mX(0, mSelectedParticle);
+    P[1] = mX(1, mSelectedParticle);
+    P[2] = 0.0f;
+
+    const double k = 100;
+    mMouseForce(0) = k * (I[0] - P[0]);
+    mMouseForce(1) = k * (I[1] - P[1]);
+
+    std::cout << "Dragging Particle = " << mSelectedParticle << std::endl;
+    std::cout << "Mouse force = \n" << mMouseForce << std::endl;
+  }
+}
+
+void ParticleSystem::ExplicitEulerIntegration()
+{
   int N = mNumParticles - 1;
   Eigen::VectorXd C(N + 3);
   Eigen::MatrixXd Fext(2, N+1);
@@ -131,7 +192,7 @@ void ParticleSystem::Render() const
        mV.row(1).transpose();
 
   // Baumgarte Stabilization to avoid drift.
-  double b = 1e-3; // Damping parameter.  
+  double b = 5; // Damping parameter.  
   d << Fext.row(0).transpose(),                      // d =  |                    fx                     | 
        Fext.row(1).transpose(),                      //      |                    fy                     |
        -((grad_dC * v) + 2*b*(gradC * v) + b*b*C );  //      |  - ddC/dx * x' - 2b* dC/dx * x' - b^2 * C |
@@ -160,18 +221,18 @@ void ParticleSystem::Render() const
   mV += ( dt * accel );
   mX += ( dt * mV );
 
-  double maxFcX = Fc.row(0).maxCoeff();
-  double maxFcY = Fc.row(1).maxCoeff();
-  std::cout << "Max(FcX) = " << maxFcX << std::endl;
-  std::cout << "Max(FcY) = " << maxFcY << std::endl;  
-  std::cout << "Max(C)       = " << C.maxCoeff() << std::endl;
-  std::cout << "Max(gradC)   = " << gradC.maxCoeff() << std::endl;
-  std::cout << "Max(grad_dC) = " << grad_dC.maxCoeff() << std::endl;
+  // double maxFcX = Fc.row(0).maxCoeff();
+  // double maxFcY = Fc.row(1).maxCoeff();
+  // // std::cout << "Max(FcX) = " << maxFcX << std::endl;
+  // // std::cout << "Max(FcY) = " << maxFcY << std::endl;  
+  // // std::cout << "Max(C)       = " << C.maxCoeff() << std::endl;
+  // // std::cout << "Max(gradC)   = " << gradC.maxCoeff() << std::endl;
+  // // std::cout << "Max(grad_dC) = " << grad_dC.maxCoeff() << std::endl;
 
-  if (std::max(maxFcX, maxFcY) > 1e5)
-  {
-    std::cout << "WARNING Numerical instability.\n";
-  }
+  // // if (std::max(maxFcX, maxFcY) > 1e5)
+  // // {
+  // //   std::cout << "WARNING Numerical instability.\n";
+  // // }
 }
 
 void ParticleSystem::ExternalForces(const Eigen::MatrixXd& X, Eigen::MatrixXd& Fext)
@@ -184,7 +245,11 @@ void ParticleSystem::ExternalForces(const Eigen::MatrixXd& X, Eigen::MatrixXd& F
     Fext.col(i) = Eigen::Vector2d(0.0, -1.0);
   }
 
-  // TODO: add mouse force.
+  if (mSelectedParticle != -1)
+  {
+    Fext.col(mSelectedParticle) += mMouseForce;
+
+  }
 
   //std::cout << "Fext = \n" << Fext << std::endl;
 }
@@ -206,7 +271,7 @@ void ParticleSystem::ConstraintFunc(const Eigen::MatrixXd& X, Eigen::VectorXd& C
        C_pin,
        C_ring;
 
-  std::cout << "| C(x) |^2 = \n" << C.squaredNorm() << std::endl;
+  // std::cout << "| C(x) |^2 = \n" << C.squaredNorm() << std::endl;
 }
 
 void ParticleSystem::ConstraintGrad(const Eigen::MatrixXd& X, Eigen::MatrixXd& gradC)
